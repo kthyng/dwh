@@ -110,6 +110,16 @@ def init(date, loc, grid=None):
     lon0 = -(88 + 21/60. + 57.40/3600.)*np.ones(ntrac)
     lat0 =  (28 + 44/60. + 17.30/3600.)*np.ones(ntrac)
 
+    # Need to shift the start location a little to get it into the grid and away from the 5 cell sponge layer
+    lon0 -= 0.15
+    lat0 += 0.15
+
+    xstart0, ystart0, _ = tracpy.tools.interpolate2d(lon0, lat0, grid, 'd_ll2ij')
+
+    # surface drifters
+    z0 = 's'  
+    zpar = 29 
+
     ## Flag for streamlines. All the extra steps right after this are for streamlines. ##
     dostream = 1
 
@@ -126,10 +136,9 @@ def init(date, loc, grid=None):
 
     # Volume transport out of each grid cell in the grid
     # Find the outflowing transport values from the grid cells
-    # Note that tools.check_points eliminates points outside the domain
-    # and in the first row/column in of the grid
-    ia = np.ceil(xstart0).astype(int)
-    ja = np.ceil(ystart0).astype(int)
+    # Just use one location for this since they are all in the same location    
+    ia = np.ceil(xstart0[0]).astype(int)
+    ja = np.ceil(ystart0[0]).astype(int)
     Ueast = uf[ia,ja]
     Uwest = uf[ia-1,ja]
     Vnorth = vf[ia,ja]
@@ -146,10 +155,7 @@ def init(date, loc, grid=None):
         T0 += abs(Vsouth)
     # Divide by number of drifters
     T0 /= ntrac
-
-    # surface drifters
-    z0 = 's'  
-    zpar = 29 
+    T0 = T0*np.ones(ntrac)
 
     # for 3d flag, do3d=0 makes the run 2d and do3d=1 makes the run 3d
     do3d = 0
